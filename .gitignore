@@ -8,6 +8,14 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
+
+# Environment variables — NEVER commit these
+.env
+.env.*
+!.env.example
+
+# Vercel build output
+.vercel
 dist
 dist-ssr
 .output
