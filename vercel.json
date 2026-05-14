@@ -1,6 +1,14 @@
 {
   "buildCommand": "npm run build",
-  "installCommand": "npm install",
+  "outputDirectory": "dist/client",
   "framework": null,
-  "outputDirectory": ".vercel/output"
+  "rewrites": [
+    { "source": "/((?!assets/).*)", "destination": "/api/server" }
+  ],
+  "functions": {
+    "api/server.js": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
 }
