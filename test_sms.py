@@ -38,7 +38,7 @@ if __name__ == "__main__":
         print("Running default test messages...")
         
         print("\n--- Test 1: HDFC Credit (Income) ---")
-        msg1 = "Rs.5000.00 credited to a/c XXXXXX1234 on 14-05-26 by linked a/c to VPA jid@okaxis (UPI Ref No 123456789012)."
+        msg1 = "Rs.200 credited to a/c XXXXXX1234 on 14-05-26 by linked a/c to VPA jid@okaxis (UPI Ref No 123456789012)."
         send_sms("AD-HDFCBK", msg1)
         
         time.sleep(1)

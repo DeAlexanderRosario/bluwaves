@@ -5,8 +5,15 @@ import { useAuth } from "@/lib/auth";
 import {
   ArrowLeft, Plus, Trash2, Link2, BadgeCheck, Banknote, Smartphone,
   X, Hash, Calendar, Clock, Phone, CreditCard, Building2, User, FileText,
-  CheckCircle2, ChevronRight,
+  CheckCircle2, ChevronRight, ArrowDownLeft, ArrowUpRight,
 } from "lucide-react";
+
+function detectDirection(text: string): "received" | "sent" | "unknown" {
+  const t = text.toLowerCase();
+  if (t.includes("credited") || t.includes("received") || t.includes("credit") || t.includes("deposited")) return "received";
+  if (t.includes("debited") || t.includes("sent") || t.includes("debit") || t.includes("paid") || t.includes("withdrawn")) return "sent";
+  return "unknown";
+}
 
 export const Route = createFileRoute("/_authenticated/trips/$tripId")({ component: TripDetail });
 
@@ -187,9 +194,8 @@ function TripDetail() {
         {pax.map((p) => (
           <li key={p.id} className="rounded-2xl bg-card border border-border p-4 shadow-[var(--shadow-soft)]">
             <div className="flex items-start gap-3">
-              <div className={`size-10 rounded-xl grid place-items-center ${
-                p.payment_method === "upi" ? "bg-accent/15 text-accent" : "bg-secondary text-secondary-foreground"
-              }`}>
+              <div className={`size-10 rounded-xl grid place-items-center ${p.payment_method === "upi" ? "bg-accent/15 text-accent" : "bg-secondary text-secondary-foreground"
+                }`}>
                 {p.payment_method === "upi" ? <Smartphone className="size-5" /> : <Banknote className="size-5" />}
               </div>
               <div className="flex-1 min-w-0">
@@ -215,9 +221,8 @@ function TripDetail() {
                 <p className="font-display font-semibold">₹{Number(p.fare).toLocaleString("en-IN")}</p>
                 <button
                   onClick={() => togglePaid(p.id, p.payment_status)}
-                  className={`mt-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                    p.payment_status === "paid" ? "bg-success/15 text-success" : "bg-warning/20 text-warning-foreground"
-                  }`}
+                  className={`mt-1 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full ${p.payment_status === "paid" ? "bg-success/15 text-success" : "bg-warning/20 text-warning-foreground"
+                    }`}
                 >{p.payment_status === "paid" ? <span className="inline-flex items-center gap-1"><BadgeCheck className="size-3" />Paid</span> : "Pending"}</button>
               </div>
             </div>
@@ -256,9 +261,8 @@ function TripDetail() {
               <div className="grid grid-cols-3 gap-2 mt-1.5">
                 {(["cash", "upi", "pending"] as const).map((m) => (
                   <button type="button" key={m} onClick={() => setMethod(m)}
-                    className={`h-11 rounded-xl text-sm font-medium border transition ${
-                      method === m ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground"
-                    }`}
+                    className={`h-11 rounded-xl text-sm font-medium border transition ${method === m ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-muted-foreground"
+                      }`}
                   >{m === "pending" ? "Pending" : m.toUpperCase()}</button>
                 ))}
               </div>
@@ -280,27 +284,44 @@ function TripDetail() {
               <p className="text-sm text-muted-foreground py-6 text-center">No unlinked UPI messages yet.</p>
             )}
             <ul className="space-y-2">
-              {unlinkedSmsQ.data?.map((s) => (
-                <li key={s.id}>
-                  <button onClick={() => linkSms(s.id)}
-                    className="w-full text-left rounded-2xl bg-card border border-border p-3 hover:border-accent transition">
-                    <div className="flex justify-between items-start gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium text-sm">₹{Number(s.amount ?? 0).toLocaleString("en-IN")}</p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(s.received_at).toLocaleString()}</p>
+              {unlinkedSmsQ.data?.map((s) => {
+                const dir = detectDirection(s.text);
+                return (
+                  <li key={s.id}>
+                    <button onClick={() => linkSms(s.id)}
+                      className="w-full text-left rounded-2xl bg-card border border-border p-3 hover:border-ring transition active:scale-[0.99]">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          {/* Amount + small IN/OUT indicator */}
+                          <div className="flex items-center gap-1.5">
+                            <p className="font-medium text-sm">₹{Number(s.amount ?? 0).toLocaleString("en-IN")}</p>
+                            {dir === "received" && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-accent">
+                                <ArrowDownLeft className="size-3" />IN
+                              </span>
+                            )}
+                            {dir === "sent" && (
+                              <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-muted-foreground">
+                                <ArrowUpRight className="size-3" />OUT
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(s.received_at).toLocaleString()}</p>
+                        </div>
+                        {s.upi_ref && <span className="text-[10px] bg-secondary px-2 py-1 rounded-full text-secondary-foreground truncate max-w-[120px]">Ref: {s.upi_ref}</span>}
                       </div>
-                      {s.upi_ref && <span className="text-[10px] bg-secondary px-2 py-1 rounded-full text-secondary-foreground truncate max-w-[120px]">Ref: {s.upi_ref}</span>}
-                    </div>
-                    <div className="flex flex-wrap gap-2 mt-2 text-[10px]">
-                      {(s.sender_name || s.upi_id) && <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">From: {s.sender_name || s.upi_id}</span>}
-                      {s.from_number && <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border">Sender: {s.from_number}</span>}
-                      {s.bank_to && <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border">To: {s.bank_to}</span>}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{s.text}</p>
-                  </button>
-                </li>
-              ))}
+                      <div className="flex flex-wrap gap-2 mt-2 text-[10px]">
+                        {(s.sender_name || s.upi_id) && <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/20">From: {s.sender_name || s.upi_id}</span>}
+                        {s.from_number && <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border">Sender: {s.from_number}</span>}
+                        {s.bank_to && <span className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border">To: {s.bank_to}</span>}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{s.text}</p>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
+
           </div>
         </div>
       )}
