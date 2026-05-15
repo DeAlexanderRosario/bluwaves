@@ -1,5 +1,5 @@
 import { Link, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
-import { LayoutDashboard, Ship, MessageSquareText, Wallet, LogOut } from "lucide-react";
+import { LayoutDashboard, Ship, MessageSquareText, Wallet, LogOut, ChartColumn } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 const tabs = [
@@ -7,6 +7,7 @@ const tabs = [
   { to: "/trips", label: "Trips", Icon: Ship },
   { to: "/sms", label: "SMS", Icon: MessageSquareText },
   { to: "/expenses", label: "Expenses", Icon: Wallet },
+  { to: "/reports", label: "Reports", Icon: ChartColumn },
 ] as const;
 
 export function AppLayout() {
@@ -38,7 +39,7 @@ export function AppLayout() {
       </main>
 
       <nav className="fixed bottom-0 inset-x-0 z-30 bg-card border-t border-border">
-        <div className="max-w-xl mx-auto grid grid-cols-4">
+        <div className="max-w-xl mx-auto grid grid-cols-5">
           {tabs.map(({ to, label, Icon }) => {
             const active = loc.pathname === to || loc.pathname.startsWith(to + "/");
             return (

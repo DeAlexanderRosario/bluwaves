@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSmsRouteImport } from './routes/_authenticated/sms'
+import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedExpensesRouteImport } from './routes/_authenticated/expenses'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as ApiTripsIndexRouteImport } from './routes/api/trips/index'
@@ -49,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedSmsRoute = AuthenticatedSmsRouteImport.update({
   id: '/sms',
   path: '/sms',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedExpensesRoute = AuthenticatedExpensesRouteImport.update({
@@ -149,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/sms': typeof AuthenticatedSmsRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRoute
   '/api/auth/me': typeof ApiAuthMeRoute
@@ -172,6 +179,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/expenses': typeof AuthenticatedExpensesRoute
+  '/reports': typeof AuthenticatedReportsRoute
   '/sms': typeof AuthenticatedSmsRoute
   '/trips/$tripId': typeof AuthenticatedTripsTripIdRoute
   '/api/auth/me': typeof ApiAuthMeRoute
@@ -197,6 +205,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/expenses': typeof AuthenticatedExpensesRoute
+  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/sms': typeof AuthenticatedSmsRoute
   '/_authenticated/trips/$tripId': typeof AuthenticatedTripsTripIdRoute
   '/api/auth/me': typeof ApiAuthMeRoute
@@ -222,6 +231,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard'
     | '/expenses'
+    | '/reports'
     | '/sms'
     | '/trips/$tripId'
     | '/api/auth/me'
@@ -245,6 +255,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/dashboard'
     | '/expenses'
+    | '/reports'
     | '/sms'
     | '/trips/$tripId'
     | '/api/auth/me'
@@ -269,6 +280,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_authenticated/dashboard'
     | '/_authenticated/expenses'
+    | '/_authenticated/reports'
     | '/_authenticated/sms'
     | '/_authenticated/trips/$tripId'
     | '/api/auth/me'
@@ -336,6 +348,13 @@ declare module '@tanstack/react-router' {
       path: '/sms'
       fullPath: '/sms'
       preLoaderRoute: typeof AuthenticatedSmsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports': {
+      id: '/_authenticated/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/expenses': {
@@ -470,6 +489,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedExpensesRoute: typeof AuthenticatedExpensesRoute
+  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSmsRoute: typeof AuthenticatedSmsRoute
   AuthenticatedTripsTripIdRoute: typeof AuthenticatedTripsTripIdRoute
   AuthenticatedTripsIndexRoute: typeof AuthenticatedTripsIndexRoute
@@ -478,6 +498,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedExpensesRoute: AuthenticatedExpensesRoute,
+  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSmsRoute: AuthenticatedSmsRoute,
   AuthenticatedTripsTripIdRoute: AuthenticatedTripsTripIdRoute,
   AuthenticatedTripsIndexRoute: AuthenticatedTripsIndexRoute,
