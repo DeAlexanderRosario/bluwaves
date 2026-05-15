@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { useAuth } from "@/lib/auth";
 import {
   Download, Printer, Calendar, Banknote, Smartphone, Clock,
@@ -102,25 +102,24 @@ function Reports() {
       <style>{`
         @media print {
           body { background: white !important; color: black !important; }
-          .no-print { display: none !important; }
-          .print-full { max-width: 100% !important; padding: 0 !important; }
-          .print-break { page-break-inside: avoid; }
           nav, header { display: none !important; }
-          main { padding: 0 !important; padding-bottom: 0 !important; }
-          * { box-shadow: none !important; border-color: #ddd !important; }
-          .bg-card { background: white !important; border: 1px solid #ddd !important; }
+          @page { size: A4 portrait; margin: 15mm; }
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print-avoid-break { page-break-inside: avoid; }
         }
-        @page { size: A4 portrait; margin: 16mm; }
       `}</style>
 
-      <div className="space-y-6 pb-10 print-full">
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* ── SCREEN UI (HIDDEN IN PRINT) ── */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      <div className="space-y-6 pb-10 print:hidden">
         {/* ── Header ── */}
         <div className="flex items-start justify-between gap-2">
-          <div className="no-print">
+          <div>
             <h2 className="font-display text-2xl font-semibold">Statement</h2>
             <p className="text-xs text-muted-foreground mt-1">Detailed trip and passenger ledger</p>
           </div>
-          <div className="flex gap-2 no-print">
+          <div className="flex gap-2">
             <button onClick={exportCsv} disabled={!data}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-sm font-medium hover:bg-secondary transition-all disabled:opacity-40">
               <Download className="size-4" /> CSV
@@ -133,7 +132,7 @@ function Reports() {
         </div>
 
         {/* ── Period selector ── */}
-        <div className="space-y-2 no-print">
+        <div className="space-y-2">
           <div className="flex gap-2">
             {(["daily", "weekly", "monthly", "custom"] as Range[]).map(r => (
               <button key={r} onClick={() => setRange(r)}
@@ -161,18 +160,6 @@ function Reports() {
           )}
         </div>
 
-        {/* ── Print Header ── */}
-        <div className="hidden print:flex justify-between items-end mb-6 pb-4 border-b-2 border-primary/20">
-          <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight">Statement of Account</h1>
-            <p className="text-sm font-medium text-muted-foreground mt-1 uppercase tracking-widest">Bluwaves Boat Service</p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-medium flex items-center justify-end gap-1"><Calendar className="size-4" /> {label}</p>
-            <p className="text-xs text-muted-foreground mt-1">Generated: {new Date().toLocaleDateString("en-IN")}</p>
-          </div>
-        </div>
-
         {isLoading && (
           <div className="space-y-4">
             <div className="h-32 rounded-3xl bg-muted animate-pulse" />
@@ -183,7 +170,7 @@ function Reports() {
         {data && (
           <>
             {/* ── Summary Cards ── */}
-            <div className="grid grid-cols-2 gap-3 print:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3">
               <div className="rounded-2xl bg-card p-4 border border-border shadow-[var(--shadow-soft)]">
                 <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1 flex items-center gap-1"><Ship className="size-3" /> Total Trips</p>
                 <p className="font-display text-2xl font-bold">{data.trips}</p>
@@ -217,8 +204,7 @@ function Reports() {
                 const pend = passengers.filter(p => p.payment_status !== "paid").reduce((s, p) => s + Number(p.fare), 0);
                 
                 return (
-                  <div key={trip.id} className="rounded-2xl bg-card border border-border shadow-[var(--shadow-soft)] overflow-hidden print-break">
-                    {/* Trip Header */}
+                  <div key={trip.id} className="rounded-2xl bg-card border border-border shadow-[var(--shadow-soft)] overflow-hidden">
                     <div className="p-4 bg-secondary/30 border-b border-border flex justify-between items-start">
                       <div>
                         <h4 className="font-display font-semibold text-base">{trip.name}</h4>
@@ -233,8 +219,6 @@ function Reports() {
                         {pend > 0 && <p className="text-[10px] font-semibold text-warning-foreground">Pending: ₹{pend.toLocaleString("en-IN")}</p>}
                       </div>
                     </div>
-
-                    {/* Passengers List */}
                     <div className="divide-y divide-border">
                       {passengers.length === 0 ? (
                         <p className="p-4 text-xs text-muted-foreground text-center">No passengers recorded.</p>
@@ -266,11 +250,6 @@ function Reports() {
                 );
               })}
             </div>
-
-            {/* ── Print footer ── */}
-            <div className="hidden print:block mt-8 pt-4 border-t border-border text-xs text-muted-foreground text-center">
-              End of Report · Generated by Bluwaves Boat Manager
-            </div>
           </>
         )}
 
@@ -281,6 +260,125 @@ function Reports() {
           </div>
         )}
       </div>
+
+      {/* ══════════════════════════════════════════════════════════ */}
+      {/* ── PDF PRINT UI (HIDDEN ON SCREEN) ── */}
+      {/* ══════════════════════════════════════════════════════════ */}
+      {data && (
+        <div className="hidden print:block w-full font-sans text-black">
+          {/* Header */}
+          <div className="border-b-[3px] border-black pb-4 mb-6 flex justify-between items-end">
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight text-black m-0 p-0 leading-none">BLUWAVES</h1>
+              <p className="text-sm font-semibold text-gray-500 tracking-widest uppercase mt-1">Boat Service Manager</p>
+            </div>
+            <div className="text-right">
+              <h2 className="text-xl font-bold uppercase tracking-widest text-gray-800 m-0 p-0 leading-none">Statement of Account</h2>
+              <p className="text-sm font-medium text-gray-600 mt-2">Period: {label}</p>
+              <p className="text-xs text-gray-500 mt-0.5">Generated: {new Date().toLocaleString("en-IN")}</p>
+            </div>
+          </div>
+
+          {/* Metrics Row */}
+          <div className="flex gap-4 mb-8">
+            <div className="flex-1 bg-gray-100 p-4 rounded-lg border border-gray-200">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Total Trips</p>
+              <p className="text-2xl font-bold text-black">{data.trips}</p>
+              <p className="text-xs text-gray-600 mt-1">{data.passengers} passengers</p>
+            </div>
+            <div className="flex-1 bg-gray-100 p-4 rounded-lg border border-gray-200">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Total Revenue</p>
+              <p className="text-2xl font-bold text-black">₹{data.revenue.toLocaleString("en-IN")}</p>
+              <p className="text-xs text-gray-600 mt-1">₹{data.cash.toLocaleString("en-IN")} Cash</p>
+            </div>
+            <div className="flex-1 bg-gray-100 p-4 rounded-lg border border-gray-200">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Digital (UPI)</p>
+              <p className="text-2xl font-bold text-black">₹{data.upi.toLocaleString("en-IN")}</p>
+              <p className="text-xs text-gray-600 mt-1">Linked payments</p>
+            </div>
+            <div className="flex-1 bg-gray-100 p-4 rounded-lg border border-gray-200">
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">Pending Dues</p>
+              <p className="text-2xl font-bold text-black">₹{data.pending.toLocaleString("en-IN")}</p>
+              <p className="text-xs text-gray-600 mt-1">Outstanding</p>
+            </div>
+          </div>
+
+          {/* Ledger Table */}
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-gray-800 text-white border-b-2 border-black">
+                <th className="text-left py-2 px-3 font-semibold w-1/3">Passenger</th>
+                <th className="text-left py-2 px-3 font-semibold">Contact</th>
+                <th className="text-center py-2 px-3 font-semibold">Method</th>
+                <th className="text-center py-2 px-3 font-semibold">Status</th>
+                <th className="text-right py-2 px-3 font-semibold">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.tripGroups.map((group) => {
+                const collected = group.passengers.filter(p => p.payment_status === "paid").reduce((s, p) => s + Number(p.fare), 0);
+                return (
+                  <Fragment key={group.trip.id}>
+                    {/* Trip Subheader Row */}
+                    <tr className="bg-gray-100 border-y border-gray-300 print-avoid-break">
+                      <td colSpan={4} className="py-2 px-3">
+                        <span className="font-bold text-gray-900">{group.trip.name}</span>
+                        <span className="text-gray-500 ml-2">
+                          ({group.trip.trip_date} {group.trip.trip_time ? `at ${group.trip.trip_time.slice(0, 5)}` : ""})
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-right font-bold text-gray-900">
+                        ₹{collected.toLocaleString("en-IN")}
+                      </td>
+                    </tr>
+                    {/* Passenger Rows */}
+                    {group.passengers.length === 0 ? (
+                      <tr className="border-b border-gray-200 print-avoid-break">
+                        <td colSpan={5} className="py-2 px-3 text-center text-gray-500 italic">No passengers</td>
+                      </tr>
+                    ) : (
+                      group.passengers.map((p) => (
+                        <tr key={p.id} className="border-b border-gray-200 print-avoid-break">
+                          <td className="py-2 px-3 text-gray-900 font-medium pl-6">{p.name}</td>
+                          <td className="py-2 px-3 text-gray-600">{p.phone || "—"}</td>
+                          <td className="py-2 px-3 text-center">
+                            <span className="text-[10px] uppercase font-bold tracking-widest text-gray-600 border border-gray-300 rounded px-1.5 py-0.5">
+                              {p.payment_method}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-center">
+                            <span className={`text-[10px] uppercase font-bold tracking-widest ${p.payment_status === "paid" ? "text-green-700" : "text-red-600"}`}>
+                              {p.payment_status}
+                            </span>
+                          </td>
+                          <td className="py-2 px-3 text-right font-semibold text-gray-900">
+                            ₹{Number(p.fare).toLocaleString("en-IN")}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-[3px] border-black bg-gray-50">
+                <td colSpan={4} className="py-3 px-3 text-right font-bold uppercase tracking-wider text-gray-700">
+                  Total Collected
+                </td>
+                <td className="py-3 px-3 text-right font-bold text-lg text-black">
+                  ₹{data.revenue.toLocaleString("en-IN")}
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+
+          {/* Footer Notes */}
+          <div className="mt-8 pt-4 border-t border-gray-300 text-xs text-gray-500 text-center">
+            This is a computer generated statement and does not require a physical signature.
+          </div>
+        </div>
+      )}
     </>
   );
 }
